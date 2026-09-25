@@ -479,6 +479,8 @@ body {
    -------------------------------------------------------------------------- */
 
 .main-workspace {
+    align-items: flex-start;
+    overflow-anchor: none;
     display: flex;
     flex: 1;
     padding: 1rem 1.5rem;
@@ -540,6 +542,7 @@ body {
 
 /* Grid do Kanban (As 5 Etapas) */
 .kanban-board {
+    align-items: start;
     display: grid;
     grid-template-columns: repeat(5, minmax(260px, 1fr));
     gap: 0.85rem;
@@ -639,6 +642,7 @@ body {
    -------------------------------------------------------------------------- */
 
 .task-card {
+    flex-shrink: 0;
     background: var(--bg-card);
     border: 1px solid var(--border-card);
     border-radius: var(--radius-md);
@@ -1103,6 +1107,9 @@ body {
 }
 
 .modal-body {
+    min-height: 0;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
     padding: 1.25rem;
     overflow-y: auto;
     flex: 1;
@@ -1144,6 +1151,7 @@ body {
 
 /* Preserva a formatação digitada ou colada nas descrições. */
 .description-text, .requirement-desc {
+    line-height: 1.6;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     tab-size: 4;
@@ -1152,6 +1160,35 @@ body {
 .form-textarea {
     white-space: pre-wrap;
     tab-size: 4;
+}
+
+.column-cards, .side-column-content {
+    flex: none;
+    min-height: 200px;
+    height: 36rem;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    overflow-anchor: none;
+}
+
+.modal-header, .modal-footer, .modal-nav-tabs {
+    flex-shrink: 0;
+}
+
+.detail-field, .modal-title-group, .feature-manage-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.delivery-doc-view .delivery-doc-p {
+    white-space: pre-wrap;
+    tab-size: 4;
+}
+
+@media (max-width: 600px) {
+    .modal-window .detail-grid { grid-template-columns: 1fr; }
+    .modal-footer { flex-wrap: wrap; }
 }
 
 .form-input, .form-textarea, .form-select {
@@ -2330,4 +2367,3 @@ input:checked + .switch-slider:before {
     padding: 1rem 1.15rem;
     margin-top: 0.75rem;
 }
-

@@ -412,6 +412,14 @@ class EsteiraApp {
         const statusFilter = this.filterStatus.value;
         const searchFilter = this.filterSearch.value.trim().toLowerCase();
 
+        const columns = [this.backlogColumn, this.colDefinir, this.colDesenvolver, this.colVerificar,
+            this.colCorrigir, this.colValidar, this.humanValidationColumn, this.completedColumn];
+        const signature = JSON.stringify([this.currentProjectId, tasks, this.projectData.features,
+            featFilter, stageFilter, aiFilter, statusFilter, searchFilter]);
+        if (signature === this.boardSignature) return;
+        this.boardSignature = signature;
+        const scrollPositions = columns.map(column => column.scrollTop);
+
         // Limpar colunas
         this.backlogColumn.innerHTML = '';
         this.colDefinir.innerHTML = '';
@@ -494,6 +502,15 @@ class EsteiraApp {
         this.badgeVerificar.textContent = counts.Verificar;
         this.badgeCorrigir.textContent = counts.Corrigir;
         this.badgeValidar.textContent = counts.Validar;
+        columns.forEach((column, index) => {
+            const cards = Array.from(column.children).slice(0, 3);
+            const style = getComputedStyle(column);
+            const height = cards.reduce((sum, card) => sum + card.offsetHeight, 0)
+                + Math.max(0, cards.length - 1) * parseFloat(style.rowGap)
+                + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+            column.style.height = `${Math.max(200, height)}px`;
+            column.scrollTop = scrollPositions[index];
+        });
     }
 
     createTaskCard(task) {
@@ -719,7 +736,7 @@ class EsteiraApp {
         document.getElementById('detailAssignee').textContent = task.assignee_name || 'Não atribuído';
         document.getElementById('detailLastDelivery').textContent = task.last_delivery_ref || 'Nenhuma';
         document.getElementById('detailFailedCount').textContent = feature ? `${feature.failed_corrections_count} rodada(s)` : '0';
-        document.getElementById('detailDescription').textContent = task.description;
+        document.getElementById('detailDescription').innerHTML = this.formatInlineMarkdown(task.description);
 
         // Próxima Ação e Botões de Ação
         this.renderTaskActionBanner(task);
@@ -1458,7 +1475,7 @@ class EsteiraApp {
                 html += `</${listType}>`;
                 inList = false;
             }
-            html += `<p class="delivery-doc-p">${this.formatInlineMarkdown(trimmed)}</p>`;
+            html += `<p class="delivery-doc-p">${this.formatInlineMarkdown(line)}</p>`;
         }
 
         if (inList) html += `</${listType}>`;
@@ -2433,7 +2450,7 @@ class EsteiraApp {
 
             if (this.tutorialState.enabled === 1) {
                 // Se estiver ativo mas fechado, não forçar abertura se foi fechado manualmente
-                this.renderTutorialStep(this.tutorialState.current_step);
+                this.renderTutorialStep(this.tutorialState.current_step, false);
             } else {
                 this.tutorialDrawer.style.display = 'none';
                 this.clearSpotlight();
@@ -2457,7 +2474,7 @@ class EsteiraApp {
         }
     }
 
-    renderTutorialStep(stepNumber) {
+    renderTutorialStep(stepNumber, scrollToTarget = true) {
         const stepsDef = [
             {
                 number: 1,
@@ -2615,7 +2632,7 @@ class EsteiraApp {
 
         // Aplicar Spotlight no elemento relevante da interface
         if (step.spotlight) {
-            this.applySpotlight(step.spotlight);
+            this.applySpotlight(step.spotlight, scrollToTarget);
         } else {
             this.clearSpotlight();
         }
@@ -2665,7 +2682,7 @@ class EsteiraApp {
         }
     }
 
-    applySpotlight(selector) {
+    applySpotlight(selector, scrollToTarget = true) {
         this.clearSpotlight();
         try {
             const el = document.querySelector(selector);
@@ -2673,7 +2690,7 @@ class EsteiraApp {
                 el.classList.add('tutorial-spotlight');
                 this.activeSpotlightElement = el;
                 // Rolar suavemente para a visão se necessário
-                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                if (scrollToTarget) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         } catch {}
     }
