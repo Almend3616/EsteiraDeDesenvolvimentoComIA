@@ -1,0 +1,22 @@
+{
+  "name": "esteira-gestao-ia",
+  "version": "1.0.0",
+  "description": "Ferramenta local de gestão e orquestração de esteira de desenvolvimento com IAs",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "ia",
+    "esteira",
+    "kanban",
+    "gestao-desenvolvimento"
+  ],
+  "author": "Arquiteto de Software Sênior",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

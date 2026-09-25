@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esteira de Desenvolvimento com IA — Gestão Local</title>
+    <link rel="stylesheet" href="css/style.css?v=3.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-light">
+    <!-- Topbar / Cabeçalho Principal -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+            </div>
+            <div>
+                <h1 class="brand-title">Esteira de Desenvolvimento com IA</h1>
+                <span class="brand-subtitle">Orquestrador Local Transacional — v1.0</span>
+            </div>
+        </div>
+
+        <!-- Seletor de Projeto e Indicadores -->
+        <div class="project-selector-area">
+            <label for="projectSelect" class="sr-only">Projeto Ativo:</label>
+            <select id="projectSelect" class="form-select project-dropdown" aria-label="Selecione o projeto">
+                <option value="" disabled selected>Carregando projetos...</option>
+            </select>
+            <button id="btnRenameProject" class="btn btn-secondary btn-sm" title="Editar o nome do projeto selecionado" disabled>Editar nome</button>
+            <button id="btnNewProject" class="btn btn-secondary btn-sm" title="Criar ou vincular novo projeto local">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Novo Projeto
+            </button>
+        </div>
+
+        <div class="topbar-actions">
+            <!-- Indicador de Integridade da Documentação -->
+            <div id="docIntegrityBadge" class="status-badge badge-success" title="Integridade dos 4 Markdowns em /gestao-ia">
+                <svg class="badge-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span class="badge-text">Docs Sincronizados</span>
+            </div>
+
+            <!-- Botão Tutorial Guiado -->
+            <button id="btnToggleTutorial" class="btn btn-secondary btn-sm" title="Tutorial Guiado de Primeira Utilização">
+                <span class="icon">🎯</span>
+                <span id="tutorialNavLabel">Tutorial</span>
+            </button>
+
+            <!-- Configurações do Tutorial -->
+            <button id="btnTutorialSettings" class="btn btn-secondary btn-sm" title="Configurações do Tutorial">
+                ⚙️
+            </button>
+
+            <button id="btnImportDelivery" class="btn btn-primary btn-sm" title="Importar JSON de Entrega da IA">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Importar Entrega
+            </button>
+
+            <button id="btnBackup" class="btn btn-secondary btn-sm" title="Backup e Restauração de dados locais">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Backup
+            </button>
+
+            <!-- Alternador de Tema -->
+            <button id="btnToggleTheme" class="btn btn-secondary btn-sm" title="Alternar entre tema claro e escuro">
+                <span id="themeIcon">🌙</span>
+                <span id="themeLabel">Escuro</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Banner Flutuante de Dica Contextual -->
+    <div id="tutorialContextualTipBanner" class="contextual-tip-banner" style="display: none;" role="status">
+        <div class="tip-content">
+            <span class="tip-icon">💡</span>
+            <div class="tip-texts">
+                <strong id="tipTitle" class="tip-title">Dica da Esteira</strong>
+                <p id="tipMessage" class="tip-message"></p>
+            </div>
+        </div>
+        <div class="tip-actions">
+            <button id="btnTipAction" class="btn btn-primary btn-xs">Ver Detalhes</button>
+            <button id="btnDismissTip" class="btn btn-secondary btn-xs" title="Dispensar dica">Entendido</button>
+        </div>
+    </div>
+
+    <!-- Barra de Contexto do Projeto Ativo -->
+    <div id="projectContextBar" class="context-bar">
+        <div class="context-item">
+            <span class="context-label">Raiz Local:</span>
+            <code id="projectRootPath" class="context-code">Carregando...</code>
+        </div>
+        <div class="context-item">
+            <span class="context-label">Revisão Oficial:</span>
+            <span id="projectRevision" class="revision-tag">rev. 1</span>
+        </div>
+        <div class="context-item">
+            <span class="context-label">IAs Cadastradas:</span>
+            <div id="projectAiTags" class="ai-chips"></div>
+            <button id="btnAddAi" class="btn-chip-add" title="Adicionar Participante IA">+ IA</button>
+        </div>
+        <div class="context-item" style="margin-left: auto;">
+            <button id="btnNewFeature" class="btn btn-secondary btn-xs">+ Nova Funcionalidade</button>
+            <button id="btnManageFeatures" class="btn btn-secondary btn-xs" title="Listar e apagar funcionalidades">Gerenciar Funcionalidades</button>
+            <button id="btnNewTask" class="btn btn-primary btn-xs">+ Nova Tarefa</button>
+            <button id="btnReconcileDocs" class="btn btn-secondary btn-xs" title="Regenerar Markdowns /gestao-ia">Sincronizar Docs</button>
+        </div>
+    </div>
+
+    <!-- Área de Alertas Persistentes -->
+    <section id="alertsContainer" class="alerts-zone" aria-label="Alertas da Esteira"></section>
+
+    <!-- Métricas e Resumo Superior -->
+    <section class="metrics-bar" aria-label="Resumo do Fluxo">
+        <div class="metric-card" id="metricProntas">
+            <div class="metric-info">
+                <span class="metric-num" id="countProntas">0</span>
+                <span class="metric-label">Prontas p/ Iniciar</span>
+            </div>
+            <span class="metric-icon ready-icon">⚡</span>
+        </div>
+        <div class="metric-card" id="metricExec">
+            <div class="metric-info">
+                <span class="metric-num" id="countExec">0</span>
+                <span class="metric-label">Em Execução</span>
+            </div>
+            <span class="metric-icon run-icon">⏳</span>
+        </div>
+        <div class="metric-card" id="metricRecebidas">
+            <div class="metric-info">
+                <span class="metric-num" id="countRecebidas">0</span>
+                <span class="metric-label">Aguardando Conferência</span>
+            </div>
+            <span class="metric-icon check-icon">📥</span>
+        </div>
+        <div class="metric-card" id="metricDecisao">
+            <div class="metric-info">
+                <span class="metric-num" id="countDecisao">0</span>
+                <span class="metric-label">Aguardando Decisão</span>
+            </div>
+            <span class="metric-icon decision-icon">❓</span>
+        </div>
+        <div class="metric-card" id="metricHumano">
+            <div class="metric-info">
+                <span class="metric-num" id="countHumano">0</span>
+                <span class="metric-label">Aguardando Teste Humano</span>
+            </div>
+            <span class="metric-icon human-icon">👤</span>
+        </div>
+        <div class="metric-card" id="metricBloqueadas">
+            <div class="metric-info">
+                <span class="metric-num" id="countBloqueadas">0</span>
+                <span class="metric-label">Bloqueadas</span>
+            </div>
+            <span class="metric-icon block-icon">🚫</span>
+        </div>
+    </section>
+
+    <!-- Barra de Filtros -->
+    <section class="filters-bar" aria-label="Filtros do Kanban">
+        <div class="filter-item">
+            <label for="filterFeature">Funcionalidade:</label>
+            <select id="filterFeature" class="filter-select">
+                <option value="">Todas as Funcionalidades</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="filterStage">Etapa:</label>
+            <select id="filterStage" class="filter-select">
+                <option value="">Todas as Etapas</option>
+                <option value="Definir">Definir</option>
+                <option value="Desenvolver">Desenvolver</option>
+                <option value="Verificar">Verificar</option>
+                <option value="Corrigir">Corrigir</option>
+                <option value="Validar">Validar</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="filterAi">IA Responsável:</label>
+            <select id="filterAi" class="filter-select">
+                <option value="">Todas as IAs</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="filterStatus">Situação:</label>
+            <select id="filterStatus" class="filter-select">
+                <option value="">Todas as Situações</option>
+                <option value="planejada">Planejada</option>
+                <option value="pronta_para_iniciar">Pronta para Iniciar</option>
+                <option value="em_execucao">Em Execução</option>
+                <option value="entrega_recebida">Entrega Recebida</option>
+                <option value="aguardando_conferencia">Aguardando Conferência</option>
+                <option value="aguardando_decisao">Aguardando Decisão</option>
+                <option value="bloqueada">Bloqueada</option>
+                <option value="etapa_aceita">Etapa Aceita</option>
+                <option value="aguardando_teste_humano">Aguardando Teste Humano</option>
+                <option value="concluida">Concluída</option>
+            </select>
+        </div>
+        <div class="filter-item search-filter">
+            <input type="text" id="filterSearch" placeholder="Buscar por ID, título ou arquivo..." class="filter-input" aria-label="Buscar tarefas">
+        </div>
+    </section>
+
+    <!-- Layout Principal: Kanban + Áreas Complementares -->
+    <main class="main-workspace">
+        <!-- Área Complementar Esquerda: Backlog / Planejadas -->
+        <aside class="side-panel backlog-panel" aria-label="Backlog de Tarefas">
+            <div class="side-panel-header">
+                <div class="side-title">
+                    <span class="icon">📋</span>
+                    <span>Backlog / Planejamento</span>
+                </div>
+                <span id="backlogCountBadge" class="panel-badge">0</span>
+            </div>
+            <div id="backlogColumn" class="side-column-content kanban-dropzone" data-zone="backlog"></div>
+        </aside>
+
+        <!-- Quadro Kanban Central: As 5 Colunas do Rito Obrigatório -->
+        <section class="kanban-board" aria-label="Quadro Kanban da Esteira">
+            <!-- 1. Definir -->
+            <div class="kanban-column" data-stage="Definir">
+                <div class="column-header stage-definir">
+                    <div class="column-title">
+                        <span class="step-num">1</span>
+                        <span>Definir</span>
+                    </div>
+                    <span class="column-badge" id="badge-Definir">0</span>
+                </div>
+                <div class="column-hint">Requisitos, escopo e aceite humano</div>
+                <div class="column-cards kanban-dropzone" data-stage="Definir" id="col-Definir"></div>
+            </div>
+
+            <!-- 2. Desenvolver -->
+            <div class="kanban-column" data-stage="Desenvolver">
+                <div class="column-header stage-desenvolver">
+                    <div class="column-title">
+                        <span class="step-num">2</span>
+                        <span>Desenvolver</span>
+                    </div>
+                    <span class="column-badge" id="badge-Desenvolver">0</span>
+                </div>
+                <div class="column-hint">Implementação exclusiva do escopo</div>
+                <div class="column-cards kanban-dropzone" data-stage="Desenvolver" id="col-Desenvolver"></div>
+            </div>
+
+            <!-- 3. Verificar -->
+            <div class="kanban-column" data-stage="Verificar">
+                <div class="column-header stage-verificar">
+                    <div class="column-title">
+                        <span class="step-num">3</span>
+                        <span>Verificar</span>
+                    </div>
+                    <span class="column-badge" id="badge-Verificar">0</span>
+                </div>
+                <div class="column-hint">Auditoria, segurança e novos testes</div>
+                <div class="column-cards kanban-dropzone" data-stage="Verificar" id="col-Verificar"></div>
+            </div>
+
+            <!-- 4. Corrigir -->
+            <div class="kanban-column" data-stage="Corrigir">
+                <div class="column-header stage-corrigir">
+                    <div class="column-title">
+                        <span class="step-num">4</span>
+                        <span>Corrigir</span>
+                    </div>
+                    <span class="column-badge" id="badge-Corrigir">0</span>
+                </div>
+                <div class="column-hint">Resolução de erros ou dispensa formal</div>
+                <div class="column-cards kanban-dropzone" data-stage="Corrigir" id="col-Corrigir"></div>
+            </div>
+
+            <!-- 5. Validar -->
+            <div class="kanban-column" data-stage="Validar">
+                <div class="column-header stage-validar">
+                    <div class="column-title">
+                        <span class="step-num">5</span>
+                        <span>Validar</span>
+                    </div>
+                    <span class="column-badge" id="badge-Validar">0</span>
+                </div>
+                <div class="column-hint">Regressão e critérios de aceite técnicos</div>
+                <div class="column-cards kanban-dropzone" data-stage="Validar" id="col-Validar"></div>
+            </div>
+        </section>
+
+        <!-- Área Complementar Direita: Teste Humano e Concluídas -->
+        <aside class="side-panel right-panel" aria-label="Validação e Conclusão">
+            <!-- Seção Aguardando Teste Humano -->
+            <div class="side-panel-header human-header">
+                <div class="side-title">
+                    <span class="icon">👤</span>
+                    <span>Teste Humano</span>
+                </div>
+                <span id="humanCountBadge" class="panel-badge">0</span>
+            </div>
+            <div id="humanValidationColumn" class="side-column-content kanban-dropzone" data-zone="human_validation"></div>
+
+            <!-- Seção Concluídas -->
+            <div class="side-panel-header completed-header">
+                <div class="side-title">
+                    <span class="icon">🏁</span>
+                    <span>Concluídas</span>
+                </div>
+                <span id="completedCountBadge" class="panel-badge">0</span>
+            </div>
+            <div id="completedColumn" class="side-column-content" data-zone="completed"></div>
+        </aside>
+    </main>
+
+    <!-- Área Reservada dos Futuros Agentes (Recolhível e Desacoplada) -->
+    <section class="agents-preview-dock" id="agentsDock">
+        <button class="agents-dock-toggle" id="btnToggleAgents" aria-expanded="false" title="Expandir/Recolher visualização de agentes">
+            <span class="dock-indicator-dot"></span>
+            <span class="dock-title">Visualização dos agentes — em breve</span>
+            <span class="dock-arrow" id="dockArrow">▲</span>
+        </button>
+        <div class="agents-dock-content" id="agentsDockContent">
+            <div class="agent-character-box">
+                <div class="agent-avatar-placeholder">IA 1</div>
+                <div class="agent-status-label">Definição / Arquitetura</div>
+            </div>
+            <div class="agent-character-box">
+                <div class="agent-avatar-placeholder">IA 2</div>
+                <div class="agent-status-label">Desenvolvimento</div>
+            </div>
+            <div class="agent-character-box">
+                <div class="agent-avatar-placeholder">IA 3</div>
+                <div class="agent-status-label">Auditoria / QA</div>
+            </div>
+            <div class="agent-character-box">
+                <div class="agent-avatar-placeholder">IA 4</div>
+                <div class="agent-status-label">Segurança</div>
+            </div>
+            <div class="agent-character-box">
+                <div class="agent-avatar-placeholder">IA 5</div>
+                <div class="agent-status-label">Testes e Regressão</div>
+            </div>
+            <div class="agents-notice">
+                <p><strong>Observação Arquitetural:</strong> Esta área está reservada para renderização futura de personagens interativos. No momento, o orquestrador opera sem simulações fictícias ou motores de jogo artificiais.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= MODAIS DO SISTEMA ================= -->
+
+    <!-- Modal de Detalhes da Tarefa -->
+    <div id="modalTaskDetails" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span id="detailTaskId" class="task-id-tag">TSK-000</span>
+                    <h2 id="detailTaskTitle" class="modal-heading">Detalhes da Tarefa</h2>
+                </div>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-nav-tabs">
+                <button class="tab-btn active" data-tab="tab-overview">Visão Geral & Próxima Ação</button>
+                <button class="tab-btn" data-tab="tab-requirements">Requisitos & Critérios</button>
+                <button class="tab-btn" data-tab="tab-files">Arquivos Alterados</button>
+                <button class="tab-btn" data-tab="tab-decisions">Decisões</button>
+                <button class="tab-btn" data-tab="tab-tests">Testes & Erros</button>
+                <button class="tab-btn" data-tab="tab-timeline">Linha do Tempo</button>
+            </div>
+            <div class="modal-body">
+                <!-- Tab 1: Visão Geral -->
+                <div class="tab-pane active" id="tab-overview">
+                    <div class="detail-grid">
+                        <div class="detail-field">
+                            <label>Funcionalidade:</label>
+                            <span id="detailFeatureName">-</span>
+                        </div>
+                        <div class="detail-field">
+                            <label>Etapa Atual:</label>
+                            <span id="detailStage">-</span>
+                        </div>
+                        <div class="detail-field">
+                            <label>Situação:</label>
+                            <span id="detailStatus" class="status-chip">-</span>
+                        </div>
+                        <div class="detail-field">
+                            <label>Responsável:</label>
+                            <span id="detailAssignee">-</span>
+                        </div>
+                        <div class="detail-field">
+                            <label>Última Entrega:</label>
+                            <span id="detailLastDelivery">-</span>
+                        </div>
+                        <div class="detail-field">
+                            <label>Rodadas Reprovadas:</label>
+                            <span id="detailFailedCount" class="badge-count">0</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <label class="section-label">Descrição da Tarefa:</label>
+                        <p id="detailDescription" class="description-text"></p>
+                    </div>
+                    <div class="detail-action-banner" id="detailNextActionBanner">
+                        <div class="action-banner-text">
+                            <strong>Próxima Ação:</strong>
+                            <p id="detailNextActionText">-</p>
+                        </div>
+                        <div class="action-banner-buttons" id="detailActionButtons"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Requisitos -->
+                <div class="tab-pane" id="tab-requirements">
+                    <div id="detailRequirementsList" class="requirements-list"></div>
+                </div>
+
+                <!-- Tab 3: Arquivos -->
+                <div class="tab-pane" id="tab-files">
+                    <div id="detailFilesList" class="files-list"></div>
+                </div>
+
+                <!-- Tab 4: Decisões -->
+                <div class="tab-pane" id="tab-decisions">
+                    <div id="detailDecisionsList" class="decisions-list"></div>
+                </div>
+
+                <!-- Tab 5: Testes e Erros -->
+                <div class="tab-pane" id="tab-tests">
+                    <h3>Testes Vinculados</h3>
+                    <div id="detailTestsList" class="tests-list"></div>
+                    <h3 style="margin-top: 1.5rem;">Erros Registrados</h3>
+                    <div id="detailErrorsList" class="errors-list"></div>
+                </div>
+
+                <!-- Tab 6: Linha do Tempo -->
+                <div class="tab-pane" id="tab-timeline">
+                    <div id="detailTimelineList" class="timeline-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="modal-footer-left" style="display: flex; gap: 0.5rem;">
+                    <button type="button" id="btnModalDeleteTask" class="btn btn-secondary btn-sm" title="Apagar apenas esta tarefa">Apagar Tarefa</button>
+                    <button type="button" id="btnModalDeleteFeature" class="btn btn-secondary btn-sm" title="Apagar funcionalidade e todas as tarefas associadas">Apagar Funcionalidade</button>
+                </div>
+                <div class="modal-footer-right">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Iniciar Etapa / Instrução do Prompt -->
+    <div id="modalStartStage" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Autorizar e Iniciar Etapa</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formStartExecution">
+                    <input type="hidden" id="startTaskId">
+                    <div class="form-group">
+                        <label for="startStageSelect">Etapa a Iniciar:</label>
+                        <select id="startStageSelect" class="form-select" required>
+                            <option value="Definir">Definir</option>
+                            <option value="Desenvolver">Desenvolver</option>
+                            <option value="Verificar">Verificar</option>
+                            <option value="Corrigir">Corrigir</option>
+                            <option value="Validar">Validar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="startActorSelect">IA Selecionada:</label>
+                        <select id="startActorSelect" class="form-select" required></select>
+                        <div id="actorPermissionBanner" style="display: none; margin-top: 0.5rem; font-size: 0.8rem; background: var(--bg-surface); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <span id="actorPermissionText" style="color: var(--text-muted);"></span>
+                            <button type="button" id="btnAuthorizeActorStage" class="btn btn-secondary btn-xs" style="margin-top: 0.35rem; display: block;">Habilitar esta IA para esta etapa também</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="startScopeInput">Escopo Autorizado:</label>
+                        <textarea id="startScopeInput" class="form-textarea" rows="2" placeholder="Descreva especificamente o que a IA está autorizada a fazer..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="startResourcesInput">Recursos e Arquivos Reservados (separados por vírgula):</label>
+                        <input type="text" id="startResourcesInput" class="form-input" placeholder="ex: src/auth/jwt.js, config/auth.json">
+                        <small class="form-hint">Evita que tarefas concorrentes alterem os mesmos arquivos simultaneamente.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Confirmar Autorização e Gerar Prompt</button>
+                </form>
+
+                <!-- Área do Prompt Gerado para Cópia -->
+                <div id="generatedPromptBox" class="prompt-box" style="display: none; margin-top: 1.5rem;">
+                    <div class="prompt-box-header">
+                        <span>Prompt de Retomada Gerado (Seção 10)</span>
+                        <button id="btnCopyPrompt" class="btn btn-secondary btn-xs">Copiar Instrução</button>
+                    </div>
+                    <pre id="promptTextContent" class="prompt-content"></pre>
+                    <p class="prompt-instructions">Cole este prompt na ferramenta da IA escolhida. A IA depositará a entrega na pasta de entrada ou você poderá importá-la manualmente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Conferir Entrega -->
+    <div id="modalReviewDelivery" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <h2 class="modal-heading">Conferência Humana de Entrega</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="reviewDeliverySummary" class="delivery-summary-box"></div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="reviewNotesInput">Observações ou Motivo da Decisão:</label>
+                    <textarea id="reviewNotesInput" class="form-textarea" rows="3" placeholder="Insira considerações sobre o aceite ou motivo da rejeição..."></textarea>
+                </div>
+                <div class="modal-actions-row">
+                    <button id="btnAcceptDelivery" class="btn btn-success">✅ Aceitar Entrega</button>
+                    <button id="btnRejectDelivery" class="btn btn-danger">❌ Rejeitar Entrega</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Importação Manual de Entrega -->
+    <div id="modalImportDelivery" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Importar Entrega JSON</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-intro">Selecione o arquivo JSON gerado pela IA ou cole o conteúdo diretamente abaixo:</p>
+                <div class="form-group">
+                    <label for="importJsonFile">Arquivo (.json):</label>
+                    <input type="file" id="importJsonFile" accept=".json" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="importJsonText">Ou cole o JSON completo:</label>
+                    <textarea id="importJsonText" class="form-textarea" rows="8" placeholder='{ "schema_version": "1.0", ... }'></textarea>
+                </div>
+                <button id="btnSubmitImport" class="btn btn-primary btn-block">Validar e Importar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dispensar Correção -->
+    <div id="modalDispenseCorrection" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Dispensar Etapa de Correção</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Se a etapa de <strong>Verificar</strong> não encontrou problemas de conformidade ou segurança, você pode registrar formalmente a dispensa de correção para avançar diretamente à Validação.</p>
+                <div class="form-group">
+                    <label for="dispenseJustification">Justificativa Formal (mínimo 10 caracteres):</label>
+                    <textarea id="dispenseJustification" class="form-textarea" rows="3" placeholder="Ex: Auditoria e testes automatizados de segurança concluídos sem inconformidades..." required></textarea>
+                </div>
+                <button id="btnConfirmDispense" class="btn btn-primary btn-block">Confirmar Dispensa de Correção</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Validação Humana Final -->
+    <div id="modalHumanValidation" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Validação e Aprovação Humana</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>A etapa técnica de <strong>Validar</strong> foi concluída com sucesso. Como responsável pela esteira, confirme se a entrega atende a todos os critérios operacionais.</p>
+                <div class="form-group">
+                    <label for="humanFeedback">Parecer do Usuário / Feedback:</label>
+                    <textarea id="humanFeedback" class="form-textarea" rows="3" placeholder="Comentários sobre a validação realizada..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chkRequirementChange">
+                        <span>Em caso de reprovação, marcar como mudança de requisito (retorna a Definir em vez de Corrigir)</span>
+                    </label>
+                </div>
+                <div class="modal-actions-row">
+                    <button id="btnApproveHuman" class="btn btn-success">✅ Aprovar e Concluir</button>
+                    <button id="btnRejectHuman" class="btn btn-danger">❌ Reprovar Validação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Resolver Decisão -->
+    <div id="modalResolveDecision" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Deliberação Humana da Decisão</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="decisionDetailsBox" class="decision-box"></div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="decisionResponseInput">Decisão e Resposta Humana:</label>
+                    <textarea id="decisionResponseInput" class="form-textarea" rows="3" placeholder="Registre a alternativa escolhida e a justificativa..." required></textarea>
+                </div>
+                <div class="modal-actions-row">
+                    <button id="btnApproveDecision" class="btn btn-success">Aprovar Proposta</button>
+                    <button id="btnRejectDecision" class="btn btn-danger">Rejeitar Proposta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalRenameProject" class="modal-backdrop" aria-hidden="true" role="dialog" aria-labelledby="renameProjectHeading">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 id="renameProjectHeading" class="modal-heading">Editar nome do projeto</h2>
+                <button class="modal-close" data-close-modal aria-label="Fechar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formRenameProject">
+                    <div class="form-group">
+                        <label for="renameProjectTitle">Nome do projeto:</label>
+                        <input type="text" id="renameProjectTitle" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Salvar nome</button>
+                    <button type="button" class="btn btn-secondary btn-block" data-close-modal>Cancelar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Projeto -->
+    <div id="modalNewProject" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Cadastrar / Vincular Projeto</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formNewProject">
+                    <div class="form-group">
+                        <label for="projTitle">Título do Projeto:</label>
+                        <input type="text" id="projTitle" class="form-input" required placeholder="ex: Sistema ERP Financeiro">
+                    </div>
+                    <div class="form-group">
+                        <label for="projDesc">Descrição do Escopo:</label>
+                        <textarea id="projDesc" class="form-textarea" rows="3" required placeholder="Objetivo e escopo geral do projeto..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="projRoot">Caminho da Raiz Local:</label>
+                        <input type="text" id="projRoot" class="form-input" required placeholder="ex: C:\Projetos\MeuProjeto">
+                        <small class="form-hint">A pasta /gestao-ia será inicializada nesta raiz.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Salvar e Inicializar Projeto</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Funcionalidade -->
+    <div id="modalNewFeature" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Adicionar Funcionalidade</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formNewFeature">
+                    <div class="form-group">
+                        <label for="featTitle">Título:</label>
+                        <input type="text" id="featTitle" class="form-input" required placeholder="ex: Autenticação Multi-fator">
+                    </div>
+                    <div class="form-group">
+                        <label for="featDesc">Descrição:</label>
+                        <textarea id="featDesc" class="form-textarea" rows="3" required placeholder="Detalhes da funcionalidade..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Salvar Funcionalidade</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gerenciar Funcionalidades -->
+    <div id="modalManageFeatures" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Gerenciar Funcionalidades</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-intro" style="margin-bottom: 1rem; color: var(--text-secondary);">Visualize ou remova funcionalidades cadastradas neste projeto:</p>
+                <div id="manageFeaturesList" class="features-manage-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Tarefa -->
+    <div id="modalNewTask" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Adicionar Tarefa</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formNewTask">
+                    <div class="form-group">
+                        <label for="taskFeatureSelect">Funcionalidade:</label>
+                        <select id="taskFeatureSelect" class="form-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskTitle">Título da Tarefa:</label>
+                        <input type="text" id="taskTitle" class="form-input" required placeholder="ex: Implementar geração de QR Code OTP">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDesc">Descrição:</label>
+                        <textarea id="taskDesc" class="form-textarea" rows="6" required aria-describedby="taskDescHint" placeholder="O que deve ser realizado nesta tarefa..."></textarea>
+                        <small id="taskDescHint" class="form-hint">Quebras de linha e indentação do texto digitado ou colado serão preservadas na descrição.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDeps">Dependências (IDs de tarefas separadas por vírgula):</label>
+                        <input type="text" id="taskDeps" class="form-input" placeholder="ex: TSK-001, TSK-002">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPriority">Prioridade:</label>
+                        <select id="taskPriority" class="form-select">
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="critica">Crítica</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Criar Tarefa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar IA -->
+    <div id="modalAddAi" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Cadastrar Participante IA (1 a 5)</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formAddAi">
+                    <div class="form-group">
+                        <label for="aiNameInput">Nome da IA:</label>
+                        <input type="text" id="aiNameInput" class="form-input" required placeholder="ex: Claude 3.7 Sonnet (Dev)">
+                    </div>
+                    <div class="form-group">
+                        <label>Etapas Atribuídas:</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="aiStage" value="Definir"> Definir</label>
+                            <label><input type="checkbox" name="aiStage" value="Desenvolver"> Desenvolver</label>
+                            <label><input type="checkbox" name="aiStage" value="Verificar"> Verificar</label>
+                            <label><input type="checkbox" name="aiStage" value="Corrigir"> Corrigir</label>
+                            <label><input type="checkbox" name="aiStage" value="Validar"> Validar</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Adicionar IA</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar IA -->
+    <div id="modalEditAi" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Configurar Participante IA</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditAi">
+                    <input type="hidden" id="editAiId">
+                    <div class="form-group">
+                        <label for="editAiNameInput">Nome da IA:</label>
+                        <input type="text" id="editAiNameInput" class="form-input" required placeholder="ex: ChatGPT, Claude, Codex, etc.">
+                        <small class="form-hint">Defina o nome da ferramenta ou modelo que você realmente utiliza.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Etapas que esta IA está autorizada a fazer:</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="editAiStage" value="Definir"> Definir</label>
+                            <label><input type="checkbox" name="editAiStage" value="Desenvolver"> Desenvolver</label>
+                            <label><input type="checkbox" name="editAiStage" value="Verificar"> Verificar</label>
+                            <label><input type="checkbox" name="editAiStage" value="Corrigir"> Corrigir</label>
+                            <label><input type="checkbox" name="editAiStage" value="Validar"> Validar</label>
+                        </div>
+                        <small class="form-hint">Se você utiliza uma única IA para todo o fluxo, marque todas as 5 etapas para ela.</small>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Salvar Configurações</button>
+                        <button type="button" id="btnDeleteAi" class="btn btn-danger btn-sm" title="Excluir este participante">Excluir IA</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Backup e Restauração -->
+    <div id="modalBackup" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Backup & Restauração</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="backup-section">
+                    <h3>Exportar Backup Completo</h3>
+                    <p>Baixe o snapshot estruturado de todas as tabelas, histórico e vínculos da esteira.</p>
+                    <button id="btnDownloadBackup" class="btn btn-primary">Baixar Arquivo de Backup (.json)</button>
+                </div>
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+                <div class="backup-section">
+                    <h3>Restaurar Backup</h3>
+                    <p>Selecione um arquivo de backup previamente exportado para restaurar o banco de dados.</p>
+                    <input type="file" id="inputRestoreBackup" accept=".json" class="form-input">
+                    <button id="btnExecuteRestore" class="btn btn-danger" style="margin-top: 0.75rem;">Restaurar Dados</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PAINEL LATERAL DO TUTORIAL (MISSÕES) ================= -->
+    <aside id="tutorialDrawer" class="tutorial-drawer" aria-label="Missões do Tutorial" style="display: none;">
+        <div class="tutorial-drawer-header">
+            <div class="tutorial-title-group">
+                <span class="tutorial-badge-icon">🎯</span>
+                <div>
+                    <h3 class="tutorial-drawer-heading">Missão de Iniciação</h3>
+                    <span id="tutStepCounter" class="tutorial-step-counter">Etapa 1 de 9</span>
+                </div>
+            </div>
+            <button id="btnCloseTutorialDrawer" class="tutorial-drawer-close" title="Pausar / Fechar tutorial">&times;</button>
+        </div>
+
+        <!-- Barra de Progresso Visual -->
+        <div class="tutorial-progress-container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Progresso do Onboarding</span>
+                <span id="tutProgressPercent" class="tutorial-progress-percent">11% concluído</span>
+            </div>
+            <div class="tutorial-progress-bar">
+                <div id="tutProgressFill" class="tutorial-progress-fill" style="width: 11%;"></div>
+            </div>
+        </div>
+
+        <!-- Sequência de Atividades do Tutorial -->
+        <div class="tutorial-steps-wrapper">
+            <div class="tutorial-section-title">
+                <span>Sequência de Atividades</span>
+                <span class="tutorial-section-badge">9 Etapas</span>
+            </div>
+            <nav class="tutorial-steps-nav" aria-label="Passos do tutorial">
+                <ol id="tutStepsNavList" class="tutorial-nav-list"></ol>
+            </nav>
+        </div>
+
+        <!-- Cartão Detalhado do Passo Ativo -->
+        <div class="tutorial-active-card">
+            <div class="tut-step-header">
+                <span id="tutStepNumberBadge" class="step-num-badge">1</span>
+                <h4 id="tutStepTitle" class="tut-step-title">Escolher a pasta do projeto</h4>
+            </div>
+
+            <div class="tut-card-section">
+                <div class="tut-section-label">🎯 Objetivo:</div>
+                <p id="tutObjectiveText" class="tut-section-desc"></p>
+            </div>
+
+            <div class="tut-card-section">
+                <div class="tut-section-label">💡 Por que fazer:</div>
+                <p id="tutWhyText" class="tut-section-desc"></p>
+            </div>
+
+            <div class="tut-card-section">
+                <div class="tut-section-label">⚡ Sua ação:</div>
+                <p id="tutActionText" class="tut-section-desc"></p>
+            </div>
+
+            <!-- Botão Principal de Ação -->
+            <div class="tut-action-container">
+                <button id="btnTutPrimaryAction" class="btn btn-primary btn-block">Ação do Passo</button>
+            </div>
+
+            <div class="tut-card-section tut-confirm-section">
+                <div class="tut-section-label">✅ Como confirmar:</div>
+                <p id="tutConfirmText" class="tut-section-desc"></p>
+                <div id="tutConfirmStatus" class="tut-confirm-status status-pending">
+                    <span class="status-indicator">⏳</span>
+                    <span id="tutConfirmStatusText">Aguardando ação prática</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodapé de Navegação do Tutorial -->
+        <div class="tutorial-drawer-footer">
+            <button id="btnTutPrev" class="btn btn-secondary btn-xs" title="Passo anterior">◀ Anterior</button>
+            <button id="btnTutPause" class="btn btn-secondary btn-xs" title="Pausar o tutorial">Pausar</button>
+            <button id="btnTutNext" class="btn btn-primary btn-xs" title="Próximo passo">Próximo ▶</button>
+        </div>
+    </aside>
+
+    <!-- Modal Boas-Vindas do Tutorial -->
+    <div id="modalWelcomeTutorial" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="icon" style="font-size: 1.3rem;">🎯</span>
+                    <h2 class="modal-heading">Vamos preparar seu primeiro projeto?</h2>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); margin-bottom: 1rem;">
+                    Você vai conectar a pasta do projeto e aprender a enviar tarefas às suas IAs. Cada nova etapa continuará sendo iniciada por você.
+                </p>
+                <div class="persistent-alert alert-info" style="margin-bottom: 1.25rem;">
+                    <span>O tutorial orienta passo a passo sem executar ações automáticas ou enviar dados para terceiros.</span>
+                </div>
+                <div class="modal-actions-row" style="margin-top: 1rem;">
+                    <button id="btnDismissTutorialWelcome" class="btn btn-secondary">Agora não</button>
+                    <button id="btnStartTutorialNow" class="btn btn-primary">Começar tutorial</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Configurações do Tutorial -->
+    <div id="modalTutorialSettings" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h2 class="modal-heading">Configurações do Tutorial</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <strong>Tutorial Guiado:</strong>
+                        <p class="form-hint">Ativar ou pausar a exibição da orientação passo a passo.</p>
+                    </div>
+                    <label class="switch-control">
+                        <input type="checkbox" id="chkTutorialEnabled" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <hr style="margin: 1.25rem 0; border: none; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button id="btnResumeTutorialModal" class="btn btn-primary btn-block">▶ Retomar Tutorial da Etapa Atual</button>
+                    <button id="btnRestartTutorialModal" class="btn btn-secondary btn-block">🔄 Rever Tutorial desde o Início (Passo 1)</button>
+                </div>
+                <p class="form-hint" style="margin-top: 1rem;">
+                    * Rever ou pausar o tutorial não apaga, não duplica e não altera dados existentes de projetos ou tarefas.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Conectar IA (Etapa 2) -->
+    <div id="modalConnectAi" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <h2 class="modal-heading">Conectar a Ferramenta de IA ao Projeto</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; margin-bottom: 1rem;">
+                    <strong>Sua ferramenta de IA consegue ler e criar arquivos nesta pasta?</strong>
+                </p>
+                <div class="conn-options-grid">
+                    <button id="btnChooseLocalAi" class="btn btn-secondary conn-opt-card">
+                        <span class="conn-opt-icon">💻</span>
+                        <strong>Sim, trabalha diretamente na pasta</strong>
+                        <span class="form-hint">A IA lê o código e deposita entregas na pasta local.</span>
+                    </button>
+                    <button id="btnChooseManualAi" class="btn btn-secondary conn-opt-card">
+                        <span class="conn-opt-icon">🌐</span>
+                        <strong>Não, utilizo pelo navegador</strong>
+                        <span class="form-hint">Você fornece o contexto à IA e importa as entregas JSON.</span>
+                    </button>
+                    <button id="btnChooseTestAi" class="btn btn-secondary conn-opt-card">
+                        <span class="conn-opt-icon">🧪</span>
+                        <strong>Não sei — quero testar</strong>
+                        <span class="form-hint">Gere um prompt de teste com token para comprovar acesso.</span>
+                    </button>
+                </div>
+
+                <!-- Painel do Teste de Conexão com Token Temporário -->
+                <div id="connTestPanel" class="prompt-box" style="display: none; margin-top: 1.25rem;">
+                    <div class="prompt-box-header">
+                        <span>Prompt de Verificação de Acesso Local</span>
+                        <button id="btnCopyConnPrompt" class="btn btn-secondary btn-xs">Copiar Instrução</button>
+                    </div>
+                    <pre id="connPromptContent" class="prompt-content"></pre>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem;">
+                        <span class="form-hint">Cole na IA. Ela deve criar o arquivo temporário de confirmação.</span>
+                        <button id="btnVerifyConnToken" class="btn btn-primary btn-sm">Verificar Confirmação</button>
+                    </div>
+                    <div id="connVerifyFeedback" style="margin-top: 0.5rem;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Preparar Arquitetura de Documentação (Etapa 3) -->
+    <div id="modalPrepDocs" class="modal-backdrop" aria-hidden="true" role="dialog">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <h2 class="modal-heading">Arquitetura de Documentação (/gestao-ia)</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>O organizador utiliza uma estrutura padrão na raiz do projeto para registrar o escopo, tarefas e validações:</p>
+                <div class="tree-preview-box">
+                    <code>
+                        &lt;raiz-do-projeto&gt;/gestao-ia/<br>
+                        &nbsp;&nbsp;├── Projeto.md<br>
+                        &nbsp;&nbsp;├── Tarefas.md<br>
+                        &nbsp;&nbsp;├── Decisões.md<br>
+                        &nbsp;&nbsp;├── Validação.md<br>
+                        &nbsp;&nbsp;├── entrada/<br>
+                        &nbsp;&nbsp;├── processados/<br>
+                        &nbsp;&nbsp;├── rejeitados/<br>
+                        &nbsp;&nbsp;├── evidencias/<br>
+                        &nbsp;&nbsp;├── contexto/<br>
+                        &nbsp;&nbsp;└── prompts/
+                    </code>
+                </div>
+                <div class="prompt-box" style="margin-top: 1rem;">
+                    <div class="prompt-box-header">
+                        <span>Prompt de Preparação para a IA</span>
+                        <button id="btnCopyPrepDocsPrompt" class="btn btn-secondary btn-xs">Copiar Prompt de Preparação</button>
+                    </div>
+                    <pre id="prepDocsPromptContent" class="prompt-content"></pre>
+                </div>
+                <div class="modal-actions-row" style="margin-top: 1.25rem;">
+                    <button id="btnCheckPrepDocs" class="btn btn-primary">Verificar Estrutura na Pasta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js?v=3.0"></script>
+</body>
+</html>

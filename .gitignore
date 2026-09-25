@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+
+# Banco de dados local (fonte de verdade transitória/local da aplicação)
+*.db
+*.db-journal
+esteira.db
+
+# Diretórios temporários de testes
+tests/mock_project/
+tests/mock_debug/
+tests/*.db
+projeto_exemplo/
+
+# Logs e arquivos do sistema
+*.log
+.DS_Store
+Thumbs.db
