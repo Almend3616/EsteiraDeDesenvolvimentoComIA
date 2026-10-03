@@ -391,17 +391,33 @@ export class IngestionService {
             const isSuspended = newFailedCount >= 3;
             const newStatus = isSuspended ? 'bloqueada' : 'pronta_para_iniciar';
 
-            db.prepare(`
-                UPDATE tasks 
-                SET status = ?, updated_at = ?
-                WHERE id = ?
-            `).run(newStatus, now, task.id);
+            // 3b. Uma entrega de Verificar/Validar rejeitada que relata erros abertos não pode
+            // simplesmente repetir a mesma etapa: requireCleanReview exige zero erros abertos
+            // para (re)iniciar Validar, e não há transição de 'pronta_para_iniciar' para outra
+            // etapa. Sem isto, a tarefa fica presa indefinidamente nesses erros. A etapa
+            // seguinte correta é Corrigir, no mesmo espírito já usado quando uma entrega de
+            // Verificar é aceita com erros abertos (ver canStartExecution).
+            let newStage = task.stage;
+            if (['Verificar', 'Validar'].includes(payload.stage)) {
+                const hasOpenErrors = Boolean(
+                    db.prepare('SELECT id FROM errors WHERE task_id = ? AND resolved = 0').get(task.id)
+                );
+                if (hasOpenErrors) {
+                    newStage = 'Corrigir';
+                }
+            }
 
             db.prepare(`
-                UPDATE features 
-                SET status = ?, failed_corrections_count = ?, updated_at = ?
+                UPDATE tasks
+                SET stage = ?, status = ?, updated_at = ?
                 WHERE id = ?
-            `).run(newStatus, newFailedCount, now, feature.id);
+            `).run(newStage, newStatus, now, task.id);
+
+            db.prepare(`
+                UPDATE features
+                SET stage = ?, status = ?, failed_corrections_count = ?, updated_at = ?
+                WHERE id = ?
+            `).run(newStage, newStatus, newFailedCount, now, feature.id);
 
             if (isSuspended) {
                 const decId = this.db.getNextId('DEC');
@@ -427,7 +443,7 @@ export class IngestionService {
                 userId,
                 now,
                 JSON.stringify({ task_id: task.id, delivery_id: deliveryId, execution_id: deliv.execution_id }),
-                JSON.stringify({ stage: payload.stage, rejectionReason, failedCorrectionsCount: newFailedCount })
+                JSON.stringify({ stage: payload.stage, newStage, rejectionReason, failedCorrectionsCount: newFailedCount })
             );
 
             // Atualizar Documentação
@@ -436,6 +452,7 @@ export class IngestionService {
             return {
                 success: true,
                 deliveryId,
+                stage: newStage,
                 status: newStatus,
                 failedCorrectionsCount: newFailedCount,
                 suspended: isSuspended
